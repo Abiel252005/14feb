@@ -27,6 +27,7 @@
         const footer = document.querySelector('.footer');
         const rainCanvas = document.getElementById('heart-rain-canvas');
         const bgMusic = document.getElementById('bg-music');
+        const musicUnlockBtn = document.getElementById('music-unlock');
 
         const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -36,7 +37,8 @@
             scrollProgress: 0,
             reducedMotion: motionQuery.matches,
             activeBg: '',
-            loveMode: false
+            loveMode: false,
+            mobileOptimized: false
         };
 
         const threadState = {
@@ -60,6 +62,26 @@
             'Tu sonrisa es mi mejor hogar.',
             'Sigamos escribiendo esta historia.'
         ];
+
+        function refreshDeviceProfile() {
+            const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+            const narrowViewport = window.matchMedia('(max-width: 900px)').matches;
+            const lowMemory = Number(navigator.deviceMemory || 0) > 0 && Number(navigator.deviceMemory) <= 4;
+            const lowCpu = Number(navigator.hardwareConcurrency || 0) > 0 && Number(navigator.hardwareConcurrency) <= 4;
+            const nextMode = coarsePointer || narrowViewport || lowMemory || lowCpu;
+            const changed = nextMode !== state.mobileOptimized;
+
+            state.mobileOptimized = nextMode;
+            body.classList.toggle('mobile-optimized', state.mobileOptimized);
+
+            if (changed && state.mobileOptimized && parallaxRaf) {
+                window.cancelAnimationFrame(parallaxRaf);
+                parallaxRaf = 0;
+            }
+            if (changed && !state.mobileOptimized && !state.reducedMotion && !parallaxRaf) {
+                setupParallax();
+            }
+        }
 
         function clamp(value, min, max) {
             return Math.min(max, Math.max(min, value));
@@ -117,6 +139,7 @@
                 }
 
                 if (isActive) {
+                    video.preload = 'metadata';
                     video.currentTime = video.currentTime || 0;
                     const playPromise = video.play();
                     if (playPromise && typeof playPromise.catch === 'function') {
@@ -124,6 +147,9 @@
                     }
                 } else {
                     video.pause();
+                    if (state.mobileOptimized) {
+                        video.preload = 'none';
+                    }
                 }
             });
         }
@@ -179,8 +205,8 @@
             }
 
             const gap = state.reducedMotion
-                ? 340
-                : (state.loveMode ? 95 : 160);
+                ? 380
+                : (state.mobileOptimized ? 340 : (state.loveMode ? 95 : 160));
             if (now - threadState.lastEmitAt < gap) {
                 return;
             }
@@ -188,9 +214,11 @@
 
             const visibleLength = threadState.totalLength * threadState.lastProgress;
             const wind = Math.abs(getThreadWindStrength(now));
-            const tailWindow = Math.min(visibleLength, 220 + wind * 170);
+            const tailWindow = state.mobileOptimized
+                ? Math.min(visibleLength, 130 + wind * 60)
+                : Math.min(visibleLength, 220 + wind * 170);
             const minLength = Math.max(0, visibleLength - tailWindow);
-            const heartsCount = state.loveMode ? 2 : 1;
+            const heartsCount = state.mobileOptimized ? 1 : (state.loveMode ? 2 : 1);
 
             for (let i = 0; i < heartsCount; i += 1) {
                 const lengthOnPath = minLength + (Math.random() * Math.max(2, visibleLength - minLength));
@@ -203,14 +231,14 @@
                 return;
             }
 
-            const frameGap = state.reducedMotion ? 130 : 42;
+            const frameGap = state.mobileOptimized ? 180 : (state.reducedMotion ? 130 : 42);
             if (!force && (now - threadState.lastWindUpdate) < frameGap) {
                 return;
             }
             threadState.lastWindUpdate = now;
 
             let pointsForPath = threadState.basePoints;
-            if (!state.reducedMotion) {
+            if (!state.reducedMotion && !state.mobileOptimized) {
                 const wind = getThreadWindStrength(now);
                 const windAbs = Math.abs(wind);
                 const baseAmplitude = window.innerWidth < 768 ? 4.2 : 7.4;
@@ -450,16 +478,25 @@
                 root.style.setProperty('--pointer-y', state.pointerNormY.toFixed(4));
             };
 
+            let lastPointerFrame = 0;
             window.addEventListener('pointermove', (event) => {
+                const now = performance.now();
+                const throttle = state.mobileOptimized ? 42 : 0;
+                if (throttle > 0 && now - lastPointerFrame < throttle) {
+                    return;
+                }
+                lastPointerFrame = now;
                 updatePointer(event.clientX, event.clientY);
             }, { passive: true });
 
-            window.addEventListener('touchmove', (event) => {
-                const touch = event.touches[0];
-                if (touch) {
-                    updatePointer(touch.clientX, touch.clientY);
-                }
-            }, { passive: true });
+            if (!state.mobileOptimized) {
+                window.addEventListener('touchmove', (event) => {
+                    const touch = event.touches[0];
+                    if (touch) {
+                        updatePointer(touch.clientX, touch.clientY);
+                    }
+                }, { passive: true });
+            }
         }
 
         function setupParallax() {
@@ -490,7 +527,7 @@
                 parallaxRaf = window.requestAnimationFrame(frame);
             };
 
-            if (!state.reducedMotion) {
+            if (!state.reducedMotion && !state.mobileOptimized) {
                 parallaxRaf = window.requestAnimationFrame(frame);
             }
         }
@@ -516,27 +553,53 @@
 
             bgMusic.volume = 0.62;
 
+            const hideUnlockButton = () => {
+                if (!musicUnlockBtn) {
+                    return;
+                }
+                musicUnlockBtn.hidden = true;
+            };
+
+            const showUnlockButton = () => {
+                if (!musicUnlockBtn) {
+                    return;
+                }
+                musicUnlockBtn.hidden = false;
+            };
+
             const tryPlay = () => {
                 const playPromise = bgMusic.play();
                 if (!playPromise || typeof playPromise.catch !== 'function') {
+                    hideUnlockButton();
                     return;
                 }
 
-                playPromise.catch(() => {
-                    showToast('Toca la pantalla para iniciar la musica');
-
-                    const unlockAudio = () => {
-                        const unlockPromise = bgMusic.play();
-                        if (unlockPromise && typeof unlockPromise.catch === 'function') {
-                            unlockPromise.catch(() => { });
-                        }
-                    };
-
-                    window.addEventListener('pointerdown', unlockAudio, { once: true, passive: true });
-                    window.addEventListener('keydown', unlockAudio, { once: true });
-                    window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
-                });
+                playPromise
+                    .then(() => {
+                        hideUnlockButton();
+                    })
+                    .catch(() => {
+                        showToast('Toca la pantalla para iniciar la musica');
+                        showUnlockButton();
+                    });
             };
+
+            bgMusic.addEventListener('error', () => {
+                showToast('No se pudo cargar el audio');
+                showUnlockButton();
+            });
+
+            const unlockAudio = () => {
+                tryPlay();
+            };
+
+            if (musicUnlockBtn) {
+                musicUnlockBtn.addEventListener('click', unlockAudio);
+            }
+
+            window.addEventListener('pointerdown', unlockAudio, { once: true, passive: true });
+            window.addEventListener('keydown', unlockAudio, { once: true });
+            window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
 
             tryPlay();
         }
@@ -546,12 +609,14 @@
                 return;
             }
 
+            const safeCount = state.mobileOptimized ? Math.max(6, Math.round(count * 0.55)) : count;
+            const safeRadius = state.mobileOptimized ? radius * 0.72 : radius;
             const palette = ['#ff5d81', '#ff6f95', '#ff86a8', '#ffabc1', '#ffd5de'];
 
-            for (let i = 0; i < count; i += 1) {
+            for (let i = 0; i < safeCount; i += 1) {
                 const heart = document.createElement('span');
-                const angle = (Math.PI * 2 * i / count) + Math.random() * 0.6;
-                const distance = radius * (0.52 + Math.random() * 0.68);
+                const angle = (Math.PI * 2 * i / safeCount) + Math.random() * 0.6;
+                const distance = safeRadius * (0.52 + Math.random() * 0.68);
                 const tx = Math.cos(angle) * distance;
                 const ty = Math.sin(angle) * distance - (Math.random() * 35);
 
@@ -735,7 +800,7 @@
             }
 
             function resize() {
-                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                dpr = Math.min(window.devicePixelRatio || 1, localState.mobileOptimized ? 1.2 : 2);
                 width = window.innerWidth;
                 height = window.innerHeight;
 
@@ -749,7 +814,9 @@
                 const area = width * height;
                 baseCount = localState.reducedMotion
                     ? Math.max(10, Math.floor(area / 110000))
-                    : Math.max(26, Math.floor(area / 52000));
+                    : (localState.mobileOptimized
+                        ? Math.max(14, Math.floor(area / 90000))
+                        : Math.max(26, Math.floor(area / 52000)));
 
                 syncHeartCount();
             }
@@ -764,7 +831,7 @@
                 ctx.globalAlpha = alpha;
                 ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
                 ctx.shadowColor = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.42)`;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = localState.mobileOptimized ? 0 : 10;
 
                 ctx.beginPath();
                 ctx.moveTo(0, 5);
@@ -836,7 +903,7 @@
                 window.cancelAnimationFrame(parallaxRaf);
                 parallaxRaf = 0;
             }
-            if (!state.reducedMotion && !parallaxRaf) {
+            if (!state.reducedMotion && !state.mobileOptimized && !parallaxRaf) {
                 setupParallax();
             }
             applyWindToThread(performance.now(), true);
@@ -852,6 +919,7 @@
                 window.cancelAnimationFrame(resizeRaf);
             }
             resizeRaf = window.requestAnimationFrame(() => {
+                refreshDeviceProfile();
                 updateProgressBar();
                 rainController.resize();
                 buildStoryThread();
@@ -861,6 +929,7 @@
         window.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('resize', handleResize);
 
+        refreshDeviceProfile();
         setActiveBackground('bg-hero');
         setupSectionObserver();
         setupRevealObserver();

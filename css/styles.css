@@ -34,6 +34,39 @@ body {
     line-height: 1.6;
 }
 
+body.mobile-optimized .grain-overlay {
+    opacity: 0.02;
+}
+
+body.mobile-optimized .glow-layer,
+body.mobile-optimized .ribbon-layer {
+    display: none;
+}
+
+body.mobile-optimized .hearts-layer .h2,
+body.mobile-optimized .hearts-layer .h4,
+body.mobile-optimized .hearts-layer .h6 {
+    display: none;
+}
+
+body.mobile-optimized .cinema-bg {
+    transition: opacity 0.7s ease, transform 2.4s ease, filter 0.9s ease;
+}
+
+body.mobile-optimized .cinema-bg.active {
+    transform: scale(1.05);
+}
+
+body.mobile-optimized .glass-card {
+    box-shadow: 0 10px 24px rgba(24, 6, 12, 0.34);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+body.mobile-optimized #thread-heart-layer {
+    display: none;
+}
+
 h1,
 h2,
 h3 {
@@ -142,6 +175,15 @@ h3 {
 #love-toast.visible {
     opacity: 1;
     transform: translate(-50%, 0);
+}
+
+.music-unlock {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 88;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 #parallax-scene {
@@ -815,6 +857,11 @@ body.love-mode #story-thread-path {
 }
 
 @media (max-width: 768px) {
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
     .section-trigger {
         min-height: 92vh;
         padding: 1rem;
@@ -830,6 +877,20 @@ body.love-mode #story-thread-path {
 
     .hearts-layer .floating-heart {
         font-size: 1rem;
+    }
+
+    .btn {
+        min-height: 44px;
+    }
+
+    .music-unlock {
+        left: 0.75rem;
+        bottom: 0.75rem;
+        padding: 0.66rem 0.9rem;
+    }
+
+    .scroll-indicator {
+        animation-duration: 3.2s;
     }
 }
 
