@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestra Historia de Amor | 14 de Febrero</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <!-- Visual FX -->
+    <canvas id="heart-rain-canvas" aria-hidden="true"></canvas>
+    <div id="heart-burst-layer" aria-hidden="true"></div>
+    <div class="grain-overlay" aria-hidden="true"></div>
+    <div id="love-toast" aria-live="polite"></div>
+    <div class="story-progress" aria-hidden="true">
+        <span id="progress-fill"></span>
+    </div>
+
+    <!-- Parallax Scene -->
+    <div id="parallax-scene" aria-hidden="true">
+        <div class="parallax-layer glow-layer" data-depth="0.08"></div>
+        <div class="parallax-layer ribbon-layer" data-depth="0.18"></div>
+        <div class="parallax-layer bokeh-layer" data-depth="0.30"></div>
+        <div class="parallax-layer hearts-layer" data-depth="0.44">
+            <span class="floating-heart h1">❤</span>
+            <span class="floating-heart h2">❤</span>
+            <span class="floating-heart h3">❤</span>
+            <span class="floating-heart h4">❤</span>
+            <span class="floating-heart h5">❤</span>
+            <span class="floating-heart h6">❤</span>
+        </div>
+    </div>
+
+    <!-- CINEMATIC BACKGROUND LAYER (Fixed) -->
+    <div id="cinematic-bg-container">
+        <div class="cinema-bg active" id="bg-hero"
+            style="background-image: linear-gradient(145deg, #3b0c22 0%, #7e1636 42%, #ffd8d1 100%);"></div>
+
+        <div class="cinema-bg video-bg" id="bg-1">
+            <video class="cinema-video" autoplay muted loop playsinline preload="metadata">
+                <source src="assets/recuerdo-1.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="cinema-bg video-bg" id="bg-2">
+            <video class="cinema-video" autoplay muted loop playsinline preload="metadata">
+                <source src="assets/recuerdo-2.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="cinema-bg" id="bg-3" style="background-image: url('assets/cafe.jpeg');"></div>
+        <div class="cinema-bg video-bg" id="bg-4">
+            <video class="cinema-video" autoplay muted loop playsinline preload="metadata">
+                <source src="assets/recuerdo-4.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="cinema-bg video-bg" id="bg-5">
+            <video class="cinema-video" autoplay muted loop playsinline preload="metadata">
+                <source src="assets/aventuras.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="cinema-bg video-bg" id="bg-para-ti">
+            <video class="cinema-video" autoplay muted loop playsinline preload="metadata">
+                <source src="assets/para-ti.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- CONTENT LAYER (Scrollable) -->
+    <main class="scrolly-content">
+        <svg id="story-thread-layer" aria-hidden="true" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="threadGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#ff8fa9" />
+                    <stop offset="58%" stop-color="#ff4e76" />
+                    <stop offset="100%" stop-color="#c31345" />
+                </linearGradient>
+            </defs>
+            <path id="story-thread-shadow"></path>
+            <path id="story-thread-path"></path>
+            <circle id="story-thread-head" r="6"></circle>
+        </svg>
+        <div id="thread-heart-layer" aria-hidden="true"></div>
+
+        <!-- Hero Section -->
+        <header class="hero section-trigger" data-bg="bg-hero">
+            <div class="hero-content">
+                <p class="hero-date fade-in-up">14 de Febrero</p>
+                <h1 class="fade-in-up">Nuestra Historia</h1>
+                <p class="subtitle fade-in-up">Cada paso juntos escribe un universo que solo existe cuando estamos tú y
+                    yo.</p>
+                <div class="heart-wrapper fade-in-up">
+                    <svg class="beating-heart" viewBox="0 0 32 29.6" width="100" height="100">
+                        <path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+                        c6.1-9.3,16-11.3,16-21.2C32,3.8,28.2,0,23.6,0z" fill="#E63946" />
+                    </svg>
+                </div>
+                <div class="hero-actions fade-in-up">
+                    <button id="start-story" class="btn btn-primary" type="button">Comenzar historia</button>
+                    <button id="play-magic" class="btn btn-secondary" type="button">Encender magia</button>
+                </div>
+                <div class="scroll-indicator fade-in-up" id="scroll-indicator" role="button" tabindex="0">
+                    <span>Desliza para comenzar</span>
+                    <div class="arrow">↓</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 1 -->
+        <section class="story-section section-trigger" data-bg="bg-1">
+            <div class="glass-card story-card scroll-reveal">
+                <p class="memory-tag">Recuerdo I</p>
+                <h2>El Comienzo</h2>
+                <p>Al inicio estaba muy nervioso; todo era nuevo para mí, y aún lo sigue siendo de la mejor manera.
+                    Sigo tan enamorado como el primer día en que te conocí. Desde ese instante coincidimos en todo y
+                    supe que eras mi persona.</p>
+                <p class="card-hint">Toca la tarjeta para encender corazones</p>
+            </div>
+        </section>
+
+        <!-- 2 -->
+        <section class="story-section section-trigger" data-bg="bg-2">
+            <div class="glass-card story-card scroll-reveal">
+                <p class="memory-tag">Recuerdo II</p>
+                <h2>Primera cita</h2>
+                <p>Nuestra primera salida ya como novios fue inolvidable: comimos juntos, reímos todo el día y por
+                    horas solo existimos tú y yo, disfrutando cada segundo.</p>
+                <p class="card-hint">Toca la tarjeta para encender corazones</p>
+            </div>
+        </section>
+
+        <!-- 3 -->
+        <section class="story-section section-trigger" data-bg="bg-3">
+            <div class="glass-card story-card scroll-reveal">
+                <p class="memory-tag">Recuerdo III</p>
+                <h2>Nuestros Cafés</h2>
+                <p>Esas salidas a desayunar y tomar café siempre han sido maravillosas, porque en cada mesa comparto
+                    contigo momentos simples que se convierten en mis recuerdos más felices.</p>
+                <p class="card-hint">Toca la tarjeta para encender corazones</p>
+            </div>
+        </section>
+
+        <!-- 4 -->
+        <section class="story-section section-trigger" data-bg="bg-4">
+            <div class="glass-card story-card scroll-reveal">
+                <p class="memory-tag">Recuerdo IV</p>
+                <h2>Aventuras Juntos</h2>
+                <p>Nuestros viajes diarios en autobús también son especiales; en esos trayectos parece que el mundo se
+                    detiene y solo existimos tú y yo.</p>
+                <p class="card-hint">Toca la tarjeta para encender corazones</p>
+            </div>
+        </section>
+
+        <!-- 5 -->
+        <section class="story-section section-trigger" data-bg="bg-5">
+            <div class="glass-card story-card scroll-reveal">
+                <p class="memory-tag">Recuerdo V</p>
+                <h2>Construyendo Futuro</h2>
+                <p>Imaginar nuestro futuro ya no es un sueño lejano: es un plan que me hace inmensamente feliz.
+                    Gracias por ser la mujer con la que quiero compartir mi vida, mis ambiciones y cada uno de mis
+                    sueños.</p>
+                <p class="card-hint">Toca la tarjeta para encender corazones</p>
+            </div>
+        </section>
+
+        <section class="story-section section-trigger" data-bg="bg-para-ti">
+            <div class="video-container glass-card scroll-reveal">
+                <h2>Para Nallely ❤️</h2>
+                <p class="video-caption">Me hace demasiado feliz pasar todos mis días contigo.</p>
+                <video class="love-video" autoplay muted loop preload="metadata" playsinline>
+                    <source src="assets/para-ti.mp4" type="video/mp4">
+                    Tu navegador no soporta videos HTML5.
+                </video>
+                <button id="final-burst" class="btn btn-primary" type="button">Lanzar lluvia especial</button>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content scroll-reveal">
+                <p>"Te volvería a elegir en esta y mil vidas más."</p>
+                <div class="signature-wrapper">
+                    <svg id="ekg-heart" viewBox="0 0 500 150" xmlns="http://www.w3.org/2000/svg">
+                        <path class="ekg-path" d="M0,75 L120,75 L130,40 L150,110 L160,75 L180,75 
+                             C180,40 220,20 250,50 
+                             C280,20 320,40 320,75 
+                             C320,110 280,130 250,150 
+                             C220,130 180,110 180,75
+                             M320,75 L340,75 L350,40 L370,110 L380,75 L500,75" fill="none" stroke="#FFFFFF"
+                            stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p class="author">Mi corazón solo late por ti.</p>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- Custom JS -->
+    <script src="js/app.js"></script>
+</body>
+
+</html>
