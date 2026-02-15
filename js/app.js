@@ -81,14 +81,8 @@
 
             state.mobileOptimized = nextMode;
             body.classList.toggle('mobile-optimized', state.mobileOptimized);
-            if (threadSvg) {
-                threadSvg.style.display = state.mobileOptimized ? 'none' : '';
-            }
             if (threadHeartLayer) {
                 threadHeartLayer.style.display = state.mobileOptimized ? 'none' : '';
-            }
-            if (state.mobileOptimized) {
-                threadState.enabled = false;
             }
 
             if (changed && state.mobileOptimized && parallaxRaf) {
@@ -100,6 +94,7 @@
             }
             if (changed) {
                 syncRainController();
+                buildStoryThread();
             }
         }
 
@@ -217,13 +212,13 @@
         }
 
         function emitThreadHearts(now = performance.now()) {
-            if (!threadState.enabled || threadState.lastProgress <= 0.015) {
+            if (!threadState.enabled || threadState.lastProgress <= 0.015 || state.mobileOptimized) {
                 return;
             }
 
             const gap = state.reducedMotion
                 ? 380
-                : (state.mobileOptimized ? 340 : (state.loveMode ? 95 : 160));
+                : (state.loveMode ? 95 : 160);
             if (now - threadState.lastEmitAt < gap) {
                 return;
             }
@@ -231,11 +226,9 @@
 
             const visibleLength = threadState.totalLength * threadState.lastProgress;
             const wind = Math.abs(getThreadWindStrength(now));
-            const tailWindow = state.mobileOptimized
-                ? Math.min(visibleLength, 130 + wind * 60)
-                : Math.min(visibleLength, 220 + wind * 170);
+            const tailWindow = Math.min(visibleLength, 220 + wind * 170);
             const minLength = Math.max(0, visibleLength - tailWindow);
-            const heartsCount = state.mobileOptimized ? 1 : (state.loveMode ? 2 : 1);
+            const heartsCount = state.loveMode ? 2 : 1;
 
             for (let i = 0; i < heartsCount; i += 1) {
                 const lengthOnPath = minLength + (Math.random() * Math.max(2, visibleLength - minLength));
@@ -344,11 +337,6 @@
         }
 
         function buildStoryThread() {
-            if (state.mobileOptimized) {
-                threadState.enabled = false;
-                threadState.basePoints = [];
-                return;
-            }
             if (!scrollyContent || !threadSvg || !threadPath || !threadShadow || threadCards.length < 2) {
                 threadState.enabled = false;
                 threadState.basePoints = [];
@@ -708,7 +696,7 @@
             if (magicBtn) {
                 magicBtn.textContent = state.loveMode ? 'Bajar intensidad' : 'Encender magia';
             }
-            rainController.setIntensity(state.loveMode ? 1.65 : 1);
+            rainController.setIntensity(state.mobileOptimized ? (state.loveMode ? 0.85 : 0.42) : (state.loveMode ? 1.65 : 1));
             const centerX = window.innerWidth * 0.5;
             const centerY = window.innerHeight * 0.38;
             createHeartBurst(centerX, centerY, state.loveMode ? 28 : 16, state.loveMode ? 220 : 130);
@@ -732,11 +720,11 @@
             }
             if (finalBurstBtn) {
                 finalBurstBtn.addEventListener('click', () => {
-                    rainController.setIntensity(2.2);
+                    rainController.setIntensity(state.mobileOptimized ? 0.95 : 2.2);
                     createHeartBurst(window.innerWidth * 0.5, window.innerHeight * 0.45, 42, 250);
                     showToast('Cada latido te celebra.');
                     window.setTimeout(() => {
-                        rainController.setIntensity(state.loveMode ? 1.65 : 1);
+                        rainController.setIntensity(state.mobileOptimized ? (state.loveMode ? 0.85 : 0.42) : (state.loveMode ? 1.65 : 1));
                     }, 2200);
                 });
             }
@@ -934,23 +922,13 @@
         }
 
         function syncRainController() {
-            if (state.mobileOptimized) {
-                if (rainController !== noopRainController) {
-                    rainController.destroy();
-                    rainController = noopRainController;
-                }
-                if (rainCanvas) {
-                    rainCanvas.style.display = 'none';
-                }
-                return;
-            }
-
             if (rainCanvas) {
                 rainCanvas.style.display = '';
             }
             if (rainController === noopRainController) {
                 rainController = createHeartRain(rainCanvas, state);
             }
+            rainController.setIntensity(state.mobileOptimized ? (state.loveMode ? 0.85 : 0.42) : (state.loveMode ? 1.65 : 1));
         }
 
         motionQuery.addEventListener('change', (event) => {
@@ -971,9 +949,7 @@
         const runScrollWork = () => {
             scrollRaf = 0;
             updateProgressBar();
-            if (!state.mobileOptimized) {
-                updateStoryThreadProgress();
-            }
+            updateStoryThreadProgress();
         };
         const handleScroll = () => {
             if (scrollRaf) {

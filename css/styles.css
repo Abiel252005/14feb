@@ -44,7 +44,6 @@ body.mobile-optimized .ribbon-layer {
 }
 
 body.mobile-optimized #parallax-scene,
-body.mobile-optimized #story-thread-layer,
 body.mobile-optimized #thread-heart-layer {
     display: none !important;
 }
