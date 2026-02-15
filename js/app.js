@@ -26,6 +26,7 @@
         const burstLayer = document.getElementById('heart-burst-layer');
         const footer = document.querySelector('.footer');
         const rainCanvas = document.getElementById('heart-rain-canvas');
+        const bgMusic = document.getElementById('bg-music');
 
         const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -508,6 +509,38 @@
             }, 1900);
         }
 
+        function setupBackgroundMusic() {
+            if (!bgMusic) {
+                return;
+            }
+
+            bgMusic.volume = 0.62;
+
+            const tryPlay = () => {
+                const playPromise = bgMusic.play();
+                if (!playPromise || typeof playPromise.catch !== 'function') {
+                    return;
+                }
+
+                playPromise.catch(() => {
+                    showToast('Toca la pantalla para iniciar la musica');
+
+                    const unlockAudio = () => {
+                        const unlockPromise = bgMusic.play();
+                        if (unlockPromise && typeof unlockPromise.catch === 'function') {
+                            unlockPromise.catch(() => { });
+                        }
+                    };
+
+                    window.addEventListener('pointerdown', unlockAudio, { once: true, passive: true });
+                    window.addEventListener('keydown', unlockAudio, { once: true });
+                    window.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+                });
+            };
+
+            tryPlay();
+        }
+
         function createHeartBurst(x, y, count = 16, radius = 130) {
             if (!burstLayer) {
                 return;
@@ -836,6 +869,7 @@
         setupParallax();
         setupCardInteractions();
         setupControls();
+        setupBackgroundMusic();
         buildStoryThread();
         handleScroll();
 
