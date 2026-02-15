@@ -43,6 +43,12 @@ body.mobile-optimized .ribbon-layer {
     display: none;
 }
 
+body.mobile-optimized #parallax-scene,
+body.mobile-optimized #story-thread-layer,
+body.mobile-optimized #thread-heart-layer {
+    display: none !important;
+}
+
 body.mobile-optimized .hearts-layer .h2,
 body.mobile-optimized .hearts-layer .h4,
 body.mobile-optimized .hearts-layer .h6 {
@@ -51,20 +57,46 @@ body.mobile-optimized .hearts-layer .h6 {
 
 body.mobile-optimized .cinema-bg {
     transition: opacity 0.7s ease, transform 2.4s ease, filter 0.9s ease;
+    filter: none;
 }
 
 body.mobile-optimized .cinema-bg.active {
-    transform: scale(1.05);
+    transform: scale(1);
+    filter: none;
+}
+
+body.mobile-optimized .cinema-bg.video-bg::before {
+    display: none;
+}
+
+body.mobile-optimized .cinema-bg::after {
+    background: linear-gradient(to bottom, rgba(11, 2, 7, 0.36) 10%, rgba(15, 4, 10, 0.46) 100%);
+}
+
+body.mobile-optimized .cinema-video {
+    filter: none;
 }
 
 body.mobile-optimized .glass-card {
-    box-shadow: 0 10px 24px rgba(24, 6, 12, 0.34);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 18px rgba(24, 6, 12, 0.28);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background:
+        linear-gradient(152deg, rgba(255, 241, 235, 0.20), rgba(255, 214, 204, 0.09)),
+        rgba(20, 6, 12, 0.44);
 }
 
-body.mobile-optimized #thread-heart-layer {
-    display: none;
+body.mobile-optimized #love-toast,
+body.mobile-optimized .music-unlock {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+body.mobile-optimized .fade-in-up,
+body.mobile-optimized .scroll-reveal {
+    filter: none;
+    transform: translate3d(0, 16px, 0);
+    transition: opacity 320ms ease, transform 360ms ease;
 }
 
 h1,

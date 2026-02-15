@@ -54,6 +54,14 @@
 
         let toastTimeoutId = null;
         let parallaxRaf = 0;
+        let scrollRaf = 0;
+        const noopRainController = {
+            setIntensity: () => { },
+            onReduceMotionChange: () => { },
+            resize: () => { },
+            destroy: () => { }
+        };
+        let rainController = noopRainController;
 
         const notes = [
             'Eres mi casualidad favorita.',
@@ -73,6 +81,15 @@
 
             state.mobileOptimized = nextMode;
             body.classList.toggle('mobile-optimized', state.mobileOptimized);
+            if (threadSvg) {
+                threadSvg.style.display = state.mobileOptimized ? 'none' : '';
+            }
+            if (threadHeartLayer) {
+                threadHeartLayer.style.display = state.mobileOptimized ? 'none' : '';
+            }
+            if (state.mobileOptimized) {
+                threadState.enabled = false;
+            }
 
             if (changed && state.mobileOptimized && parallaxRaf) {
                 window.cancelAnimationFrame(parallaxRaf);
@@ -80,6 +97,9 @@
             }
             if (changed && !state.mobileOptimized && !state.reducedMotion && !parallaxRaf) {
                 setupParallax();
+            }
+            if (changed) {
+                syncRainController();
             }
         }
 
@@ -140,16 +160,13 @@
 
                 if (isActive) {
                     video.preload = 'metadata';
-                    video.currentTime = video.currentTime || 0;
                     const playPromise = video.play();
                     if (playPromise && typeof playPromise.catch === 'function') {
                         playPromise.catch(() => { });
                     }
                 } else {
                     video.pause();
-                    if (state.mobileOptimized) {
-                        video.preload = 'none';
-                    }
+                    video.preload = 'none';
                 }
             });
         }
@@ -327,6 +344,11 @@
         }
 
         function buildStoryThread() {
+            if (state.mobileOptimized) {
+                threadState.enabled = false;
+                threadState.basePoints = [];
+                return;
+            }
             if (!scrollyContent || !threadSvg || !threadPath || !threadShadow || threadCards.length < 2) {
                 threadState.enabled = false;
                 threadState.basePoints = [];
@@ -720,6 +742,9 @@
             }
 
             window.addEventListener('click', (event) => {
+                if (state.mobileOptimized) {
+                    return;
+                }
                 const interactive = event.target.closest('button, .glass-card, .scroll-indicator');
                 if (interactive) {
                     return;
@@ -728,6 +753,9 @@
             });
 
             window.addEventListener('dblclick', (event) => {
+                if (state.mobileOptimized) {
+                    return;
+                }
                 createHeartBurst(event.clientX, event.clientY, 26, 180);
             });
         }
@@ -737,7 +765,8 @@
                 return {
                     setIntensity: () => { },
                     onReduceMotionChange: () => { },
-                    resize: () => { }
+                    resize: () => { },
+                    destroy: () => { }
                 };
             }
 
@@ -884,20 +913,49 @@
                 resize();
             }
 
+            function destroy() {
+                if (rafId) {
+                    window.cancelAnimationFrame(rafId);
+                    rafId = 0;
+                }
+                hearts = [];
+                ctx.clearRect(0, 0, width, height);
+            }
+
             resize();
             rafId = window.requestAnimationFrame(tick);
 
             return {
                 setIntensity,
                 onReduceMotionChange,
-                resize
+                resize,
+                destroy
             };
         }
 
-        const rainController = createHeartRain(rainCanvas, state);
+        function syncRainController() {
+            if (state.mobileOptimized) {
+                if (rainController !== noopRainController) {
+                    rainController.destroy();
+                    rainController = noopRainController;
+                }
+                if (rainCanvas) {
+                    rainCanvas.style.display = 'none';
+                }
+                return;
+            }
+
+            if (rainCanvas) {
+                rainCanvas.style.display = '';
+            }
+            if (rainController === noopRainController) {
+                rainController = createHeartRain(rainCanvas, state);
+            }
+        }
 
         motionQuery.addEventListener('change', (event) => {
             state.reducedMotion = event.matches;
+            syncRainController();
             rainController.onReduceMotionChange();
             if (state.reducedMotion && parallaxRaf) {
                 window.cancelAnimationFrame(parallaxRaf);
@@ -910,9 +968,18 @@
         });
 
         let resizeRaf = 0;
-        const handleScroll = () => {
+        const runScrollWork = () => {
+            scrollRaf = 0;
             updateProgressBar();
-            updateStoryThreadProgress();
+            if (!state.mobileOptimized) {
+                updateStoryThreadProgress();
+            }
+        };
+        const handleScroll = () => {
+            if (scrollRaf) {
+                return;
+            }
+            scrollRaf = window.requestAnimationFrame(runScrollWork);
         };
         const handleResize = () => {
             if (resizeRaf) {
@@ -930,6 +997,7 @@
         window.addEventListener('resize', handleResize);
 
         refreshDeviceProfile();
+        syncRainController();
         setActiveBackground('bg-hero');
         setupSectionObserver();
         setupRevealObserver();
